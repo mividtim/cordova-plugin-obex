@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        id="com.mividstudios.obex_opp" version="0.0.1">
+    <name>OBEX OPP</name>
+    <author>Tim Garthwaite &lt;tim@mividstudios.com&gt;</author>
+    <description>Cordova Bluetooth OBject EXchange Object Push Profile Plugin</description>
+    <license>Apache 2.0</license>
+    <keywords>cordova,obex,opp</keywords>
+    <js-module src="www/obex-opp.js" name="obex_opp">
+        <clobbers target="obex.opp" />
+    </js-module>
+    <platform name="android">
+        <config-file target="config.xml" parent="/*">
+            <feature name="OBEX_OPP">
+                <param name="android-package" value="OBEX_OPP"/>
+            </feature>
+        </config-file>
+        <source-file src="src/android/obex_opp.java" />
+    </platform>
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="OBEX_OPP">
+                <param name="ios-package" value="OBEX_OPP"/>
+            </feature>
+        </config-file>
+        <header-file src="src/ios/obex_opp.h" />
+        <source-file src="src/ios/obex_opp.m" />
+    </platform>
+</plugin>
