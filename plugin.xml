@@ -10,13 +10,18 @@
         <clobbers target="obex.opp" />
     </js-module>
     <platform name="android">
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.BLUETOOTH" />
+            <uses-permission android:name="android.permission.ACCESS_BLUETOOTH_SHARE" />
+        </config-file>
         <config-file target="config.xml" parent="/*">
-            <feature name="OBEX_OPP">
-                <param name="android-package" value="OBEX_OPP"/>
+            <feature name="OBEX">
+                <param name="android-package" value="com.mividstudios.cordova.OBEX"/>
             </feature>
         </config-file>
-        <source-file src="src/android/obex_opp.java" />
+        <source-file src="src/android/OBEX.java" />
     </platform>
+<!--
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
             <feature name="OBEX_OPP">
@@ -26,4 +31,5 @@
         <header-file src="src/ios/obex_opp.h" />
         <source-file src="src/ios/obex_opp.m" />
     </platform>
+-->
 </plugin>
