@@ -1,3 +1,5 @@
+if(window.obex === undefined)
+    window.obex = {};
 window.obex.opp = function(str, callback) {
     cordova.exec(
         callback,
@@ -5,4 +7,5 @@ window.obex.opp = function(str, callback) {
         "OBEX",
         "opp",
         [str]);
+};
 

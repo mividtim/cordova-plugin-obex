@@ -17,9 +17,10 @@
         <config-file target="config.xml" parent="/*">
             <feature name="OBEX">
                 <param name="android-package" value="com.mividstudios.cordova.OBEX"/>
+                <param name="onload" value="true" />
             </feature>
         </config-file>
-        <source-file src="src/android/OBEX.java" />
+        <source-file src="src/android/OBEX.java" target-dir="src/com/mividstudios" />
     </platform>
 <!--
     <platform name="ios">
