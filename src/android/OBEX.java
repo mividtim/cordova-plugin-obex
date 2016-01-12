@@ -18,7 +18,6 @@ public class OBEX extends CordovaPlugin {
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        // TBD: Get device address and place in deviceAddress local var
     }
 
     @Override
@@ -41,7 +40,7 @@ public class OBEX extends CordovaPlugin {
             intent.setType("image/*");
             intent.setPackage("com.android.bluetooth");
             intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(imagePath)));
-            cordova.getActivity().getApplicationContext().startActivity(Intent.createChooser(intent, "Choose printer"));
+            cordova.startActivityForResult(this, Intent.createChooser(intent, "Choose printer"), 0);
             callbackContext.success(imagePath);
         }
         else
