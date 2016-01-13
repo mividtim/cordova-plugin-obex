@@ -1,8 +1,13 @@
 package com.mividstudios.cordova;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Parcelable;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -34,13 +39,43 @@ public class OBEX extends CordovaPlugin {
         return false;
     }
 
+    public static Intent createChooser(PackageManager packageManager, Intent intent, String title) {
+        final List<Intent> filtered = filterShareIntent(packageManager, intent);
+        final Intent chooser = Intent.createChooser(filtered.remove(filtered.size() - 1), title);
+        return chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, filtered.toArray(new Parcelable[] {}));
+    }
+
+    private static List<Intent> filterShareIntent(PackageManager packageManager, Intent intent) {
+        final List<Intent> intentList = new ArrayList<Intent>();
+        final List<ResolveInfo> possible = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        if(possible == null || possible.isEmpty()) {
+            intentList.add(intent);
+            return intentList;
+        }
+        for(ResolveInfo resolveInfo : possible) {
+            if(resolveInfo.activityInfo.name.equals("com.android.bluetooth.opp.BluetoothOppLauncherActivity"))
+                intentList.add(createSameIntent(intent, resolveInfo));
+        }
+        return intentList;
+    }
+
+    private static Intent createSameIntent(Intent source, ResolveInfo resolveInfo) {
+        final Intent intent = new Intent(source.getAction());
+        intent.setType(source.getType());
+        intent.putExtras(source.getExtras());
+        intent.setPackage(resolveInfo.activityInfo.packageName);
+        intent.setClassName(resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name);
+        return intent;
+    }
+
     private void opp(String imagePath, CallbackContext callbackContext) {
         if(imagePath != null && imagePath.length() > 0) {
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("image/*");
-            intent.setPackage("com.android.bluetooth");
-            intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(imagePath)));
-            cordova.startActivityForResult(this, Intent.createChooser(intent, "Choose printer"), 0);
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("image/*");
+            sendIntent.setPackage("com.android.bluetooth");
+            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(imagePath)));
+            Intent printIntent = createChooser(cordova.getActivity().getPackageManager(), sendIntent, "Choose Printer");
+            cordova.startActivityForResult(this, printIntent, 0);
             callbackContext.success(imagePath);
         }
         else
