@@ -1,13 +1,20 @@
 package com.mividstudios.cordova;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Parcelable;
+import android.os.Environment;
+import android.util.Log;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -32,31 +39,19 @@ public class OBEX extends CordovaPlugin {
         CallbackContext callbackContext)
     throws JSONException {
         if("opp".equals(action)) {
-            String imagePath = args.getString(0);
-            this.opp(imagePath, callbackContext);
+            String imageUri = args.getString(0);
+            this.opp(imageUri, callbackContext);
             return true;
         }
         return false;
     }
 
-    public static Intent createChooser(PackageManager packageManager, Intent intent, String title) {
-        final List<Intent> filtered = filterShareIntent(packageManager, intent);
-        final Intent chooser = Intent.createChooser(filtered.remove(filtered.size() - 1), title);
-        return chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, filtered.toArray(new Parcelable[] {}));
-    }
-
-    private static List<Intent> filterShareIntent(PackageManager packageManager, Intent intent) {
-        final List<Intent> intentList = new ArrayList<Intent>();
+    private static Intent getOppIntent(PackageManager packageManager, Intent intent) {
         final List<ResolveInfo> possible = packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
-        if(possible == null || possible.isEmpty()) {
-            intentList.add(intent);
-            return intentList;
-        }
-        for(ResolveInfo resolveInfo : possible) {
+        for(ResolveInfo resolveInfo : possible)
             if(resolveInfo.activityInfo.name.equals("com.android.bluetooth.opp.BluetoothOppLauncherActivity"))
-                intentList.add(createSameIntent(intent, resolveInfo));
-        }
-        return intentList;
+                return createSameIntent(intent, resolveInfo);
+        return intent;
     }
 
     private static Intent createSameIntent(Intent source, ResolveInfo resolveInfo) {
@@ -68,15 +63,40 @@ public class OBEX extends CordovaPlugin {
         return intent;
     }
 
-    private void opp(String imagePath, CallbackContext callbackContext) {
-        if(imagePath != null && imagePath.length() > 0) {
+    private File saveBase64Image(String base64Image) {
+        byte[] decodedBytes = Base64.decode(base64Image.getBytes());
+        File root = Environment.getExternalStorageDirectory();
+        File dir = new File(root.getAbsolutePath() + "/DCIM/Camera");
+        if(!dir.exists())
+            dir.mkdirs();
+        String imageFileName = dir.getAbsolutePath() + "/tempImage.jpg";
+        File imageFile = new File(imageFileName);
+        if(imageFile.exists())
+          imageFile.delete();
+        try {
+          imageFile.createNewFile();
+          FileOutputStream ostream = new FileOutputStream(imageFile);
+          ostream.write(decodedBytes);
+          ostream.close();
+          return imageFile;
+        }
+        catch(IOException ex) {
+            return null;
+        }
+    }
+
+    private void opp(String base64Image, CallbackContext callbackContext) {
+        if(base64Image != null && base64Image.length() > 0) {
+            File imageFile = saveBase64Image(base64Image);
             Intent sendIntent = new Intent(Intent.ACTION_SEND);
             sendIntent.setType("image/*");
             sendIntent.setPackage("com.android.bluetooth");
-            sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(imagePath)));
-            Intent printIntent = createChooser(cordova.getActivity().getPackageManager(), sendIntent, "Choose Printer");
+            Uri uri = Uri.fromFile(imageFile);
+            Log.d("obex", uri.toString());
+            sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            Intent printIntent = getOppIntent(cordova.getActivity().getPackageManager(), sendIntent);
             cordova.startActivityForResult(this, printIntent, 0);
-            callbackContext.success(imagePath);
+            callbackContext.success(imageFile.getAbsolutePath());
         }
         else
             callbackContext.error("Expected one non-empty string argument.");

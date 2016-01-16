@@ -6,9 +6,6 @@
     <description>OBject EXchange protocol over Bluetooth</description>
     <license>Apache 2.0</license>
     <keywords>cordova,obex</keywords>
-    <js-module src="www/obex.js" name="obex">
-        <clobbers target="obex" />
-    </js-module>
     <platform name="android">
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -21,6 +18,7 @@
             </feature>
         </config-file>
         <source-file src="src/android/OBEX.java" target-dir="src/com/mividstudios" />
+        <source-file src="src/android/Base64.java" target-dir="src/com/mividstudios" />
     </platform>
 <!--
     <platform name="ios">
